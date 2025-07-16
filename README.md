@@ -85,7 +85,7 @@ Yes, this plugin works with any theme, as it uses standard WordPress hooks and f
 
 ## Support
 
-If you encounter any issues or have questions, feel free to contact the plugin author at [info@devdinos.com] or visit our support forum at [support-forum-link].
+If you encounter any issues or have questions, feel free to contact the plugin author at [info@devdinos.com].
 
 ---
 
