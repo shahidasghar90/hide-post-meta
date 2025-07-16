@@ -24,7 +24,7 @@ add_action('admin_menu', 'hpmc_add_settings_page');
 function hpmc_settings_page() {
     ?>
     <div class="wrap">
-        <h1>Hide Post Metadata & Customize UI</h1>
+        <h1>Hide Post Metadata, Customize UI & Disable Comments</h1>
         <form method="post" action="options.php">
             <?php
             settings_fields('hpmc_options_group');
@@ -63,6 +63,16 @@ function hpmc_settings_page() {
                         <input type="text" name="post_font_color" id="post_font_color" value="<?php echo esc_attr( get_option('post_font_color') ); ?>" class="color-picker" />
                     </td>
                 </tr>
+
+                <tr valign="top">
+                    <th scope="row">Disable Comments</th>
+                    <td>
+                        <label for="disable_comments">
+                            <input type="checkbox" name="disable_comments" id="disable_comments" value="1" <?php checked( get_option('disable_comments'), 1 ); ?> />
+                            Disable Comments on Posts
+                        </label>
+                    </td>
+                </tr>
             </table>
 
             <?php submit_button(); ?>
@@ -79,6 +89,7 @@ function hpmc_register_settings() {
     register_setting('hpmc_options_group', 'hide_excerpt');
     register_setting('hpmc_options_group', 'post_bg_color');
     register_setting('hpmc_options_group', 'post_font_color');
+    register_setting('hpmc_options_group', 'disable_comments');
 }
 add_action('admin_init', 'hpmc_register_settings');
 
@@ -120,3 +131,16 @@ function hpmc_modify_post_ui() {
     }
 }
 add_action('wp_head', 'hpmc_modify_post_ui');
+
+// Disable comments based on settings
+function hpmc_disable_comments() {
+    if (is_single() && 'post' === get_post_type()) {
+        if (get_option('disable_comments') === '1') {
+            // Disable comments for posts
+            remove_post_type_support('post', 'comments');
+            // Optionally, you can also hide the comments section from the frontend:
+            echo '<style>.comments-area { display: none; }</style>';
+        }
+    }
+}
+add_action('wp', 'hpmc_disable_comments');
