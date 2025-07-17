@@ -32,31 +32,27 @@ function hpmc_settings_page() {
             ?>
             
             <table class="form-table">
-                <!-- Hide Post Metadata -->
+                <!-- Customize Post UI -->
                 <tr valign="top">
-                    <th scope="row">Hide Post Metadata</th>
+                    <th scope="row">Customize Post UI</th>
                     <td>
-                        <label for="hide_author">
-                            <input type="checkbox" name="hide_author" id="hide_author" value="1" <?php checked( get_option('hide_author'), 1 ); ?> />
-                            Hide Author Name
-                        </label><br />
-                        <label for="hide_date">
-                            <input type="checkbox" name="hide_date" id="hide_date" value="1" <?php checked( get_option('hide_date'), 1 ); ?> />
-                            Hide Post Date
-                        </label><br />
-                        <label for="hide_categories">
-                            <input type="checkbox" name="hide_categories" id="hide_categories" value="1" <?php checked( get_option('hide_categories'), 1 ); ?> />
-                            Hide Categories
-                        </label><br />
-                        <label for="hide_excerpt">
-                            <input type="checkbox" name="hide_excerpt" id="hide_excerpt" value="1" <?php checked( get_option('hide_excerpt'), 1 ); ?> />
-                            Hide Excerpt
-                        </label>
+                        <label for="post_bg_color">Post Background Color:</label><br />
+                        <input type="text" name="post_bg_color" id="post_bg_color" value="<?php echo esc_attr( get_option('post_bg_color') ); ?>" class="color-picker" /><br />
+                        <label for="post_font_color">Post Font Color:</label><br />
+                        <input type="text" name="post_font_color" id="post_font_color" value="<?php echo esc_attr( get_option('post_font_color') ); ?>" class="color-picker" />
                     </td>
                 </tr>
 
-                <!-- Other Settings -->
-                <!-- Your other settings go here... -->
+                <!-- Disable Comments -->
+                <tr valign="top">
+                    <th scope="row">Disable Comments</th>
+                    <td>
+                        <label for="disable_comments">
+                            <input type="checkbox" name="disable_comments" id="disable_comments" value="1" <?php checked( get_option('disable_comments'), 1 ); ?> />
+                            Disable Comments on Posts
+                        </label>
+                    </td>
+                </tr>
 
             </table>
 
@@ -68,60 +64,111 @@ function hpmc_settings_page() {
 
 // Register settings
 function hpmc_register_settings() {
-    register_setting('hpmc_options_group', 'hide_author');
-    register_setting('hpmc_options_group', 'hide_date');
-    register_setting('hpmc_options_group', 'hide_categories');
-    register_setting('hpmc_options_group', 'hide_excerpt');
-    // Register other settings...
+    register_setting('hpmc_options_group', 'post_bg_color');
+    register_setting('hpmc_options_group', 'post_font_color');
+    register_setting('hpmc_options_group', 'disable_comments');
 }
 add_action('admin_init', 'hpmc_register_settings');
 
-// Remove metadata hooks for author, date, categories, and excerpt
-function hpmc_remove_post_metadata() {
-    if (is_single() && 'post' === get_post_type()) {
-        
-        // Hide author
-        if (get_option('hide_author') === '1') {
-            remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10);
-            add_filter('the_author', '__return_empty_string');
-        }
+// Add custom fields for hiding post metadata in post editor
+function hpmc_add_post_metadata_options() {
+    add_meta_box(
+        'hpmc_post_metadata', // ID
+        'Hide Post Metadata', // Title
+        'hpmc_post_metadata_callback', // Callback function
+        'post', // Screen (post type)
+        'side', // Context
+        'high' // Priority
+    );
+}
+add_action('add_meta_boxes', 'hpmc_add_post_metadata_options');
 
-        // Hide date
-        if (get_option('hide_date') === '1') {
-            remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10);
-            add_filter('the_date', '__return_empty_string');
-        }
+// Callback function for post metadata options
+function hpmc_post_metadata_callback($post) {
+    // Retrieve stored metadata
+    $hide_author = get_post_meta($post->ID, '_hide_author', true);
+    $hide_date = get_post_meta($post->ID, '_hide_date', true);
+    $hide_categories = get_post_meta($post->ID, '_hide_categories', true);
+    $hide_excerpt = get_post_meta($post->ID, '_hide_excerpt', true);
 
-        // Hide categories
-        if (get_option('hide_categories') === '1') {
-            remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10);
-            add_filter('the_category', '__return_empty_string');
-        }
+    // Display checkbox fields for hiding metadata
+    ?>
+    <label for="hide_author">
+        <input type="checkbox" name="hide_author" id="hide_author" value="1" <?php checked($hide_author, '1'); ?> />
+        Hide Author
+    </label><br />
 
-        // Hide excerpt
-        if (get_option('hide_excerpt') === '1') {
-            remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10);
-            add_filter('the_excerpt', '__return_empty_string');
-        }
+    <label for="hide_date">
+        <input type="checkbox" name="hide_date" id="hide_date" value="1" <?php checked($hide_date, '1'); ?> />
+        Hide Date
+    </label><br />
+
+    <label for="hide_categories">
+        <input type="checkbox" name="hide_categories" id="hide_categories" value="1" <?php checked($hide_categories, '1'); ?> />
+        Hide Categories
+    </label><br />
+
+    <label for="hide_excerpt">
+        <input type="checkbox" name="hide_excerpt" id="hide_excerpt" value="1" <?php checked($hide_excerpt, '1'); ?> />
+        Hide Excerpt
+    </label><br />
+    <?php
+}
+
+// Save custom field data when post is saved
+function hpmc_save_post_metadata($post_id) {
+    // Check if we are saving a post
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return $post_id;
+
+    // Save metadata settings
+    if (isset($_POST['hide_author'])) {
+        update_post_meta($post_id, '_hide_author', '1');
+    } else {
+        delete_post_meta($post_id, '_hide_author');
+    }
+
+    if (isset($_POST['hide_date'])) {
+        update_post_meta($post_id, '_hide_date', '1');
+    } else {
+        delete_post_meta($post_id, '_hide_date');
+    }
+
+    if (isset($_POST['hide_categories'])) {
+        update_post_meta($post_id, '_hide_categories', '1');
+    } else {
+        delete_post_meta($post_id, '_hide_categories');
+    }
+
+    if (isset($_POST['hide_excerpt'])) {
+        update_post_meta($post_id, '_hide_excerpt', '1');
+    } else {
+        delete_post_meta($post_id, '_hide_excerpt');
     }
 }
-add_action('wp', 'hpmc_remove_post_metadata');
+add_action('save_post', 'hpmc_save_post_metadata');
 
-// Modify post content based on settings
+// Modify post content based on post-specific settings
 function hpmc_modify_post_content($content) {
     if (is_single() && 'post' === get_post_type()) {
+        global $post;
 
-        // Check settings and remove metadata if needed
-        if (get_option('hide_author') === '1') {
+        // Get post-specific metadata settings
+        $hide_author = get_post_meta($post->ID, '_hide_author', true);
+        $hide_date = get_post_meta($post->ID, '_hide_date', true);
+        $hide_categories = get_post_meta($post->ID, '_hide_categories', true);
+        $hide_excerpt = get_post_meta($post->ID, '_hide_excerpt', true);
+
+        // Check and remove metadata if needed
+        if ($hide_author === '1') {
             $content = preg_replace('/<span class="author">.*?<\/span>/', '', $content);
         }
-        if (get_option('hide_date') === '1') {
+        if ($hide_date === '1') {
             $content = preg_replace('/<span class="posted-on">.*?<\/span>/', '', $content);
         }
-        if (get_option('hide_categories') === '1') {
+        if ($hide_categories === '1') {
             $content = preg_replace('/<span class="cat-links">.*?<\/span>/', '', $content);
         }
-        if (get_option('hide_excerpt') === '1') {
+        if ($hide_excerpt === '1') {
             $content = preg_replace('/<div class="post-excerpt">.*?<\/div>/', '', $content);
         }
     }
@@ -129,51 +176,6 @@ function hpmc_modify_post_content($content) {
     return $content;
 }
 add_filter('the_content', 'hpmc_modify_post_content');
-
-// Modify post UI based on settings
-function hpmc_modify_post_ui() {
-    if (is_single() && 'post' === get_post_type()) {
-        $bg_color = get_option('post_bg_color', '#ffffff');
-        $font_color = get_option('post_font_color', '#000000');
-        $layout = get_option('post_layout', 'full-width');
-        $font_size = get_option('post_title_font_size', '36');
-        $font_family = get_option('post_title_font_family', 'Arial, sans-serif');
-        $custom_font_size = get_option('custom_font_size', '16');
-        $custom_margin = get_option('custom_margin', '10');
-        $custom_padding = get_option('custom_padding', '20');
-        $custom_css = get_option('post_custom_css');
-        
-        // Post styling
-        echo '<style>
-            .single-post {
-                background-color: ' . esc_attr($bg_color) . ';
-                color: ' . esc_attr($font_color) . ';
-                width: 100%;
-                padding: 20px;
-            }
-            .single-post.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-            .single-post.list { display: block; }
-
-            .single-post .entry-title {
-                font-size: ' . esc_attr($font_size) . 'px;
-                font-family: ' . esc_attr($font_family) . ';
-            }
-
-            .single-post {
-                font-size: ' . esc_attr($custom_font_size) . 'px;
-                margin: ' . esc_attr($custom_margin) . 'px;
-                padding: ' . esc_attr($custom_padding) . 'px;
-            }
-            ' . esc_html($custom_css) . '
-        </style>';
-
-        // Apply the layout class to the post
-        if ($layout !== 'full-width') {
-            echo "<script>document.querySelector('.single-post').classList.add('$layout');</script>";
-        }
-    }
-}
-add_action('wp_head', 'hpmc_modify_post_ui');
 
 // Disable comments based on settings
 function hpmc_disable_comments() {
