@@ -55,71 +55,9 @@ function hpmc_settings_page() {
                     </td>
                 </tr>
 
-                <!-- Customize Post UI -->
-                <tr valign="top">
-                    <th scope="row">Customize Post UI</th>
-                    <td>
-                        <label for="post_bg_color">Post Background Color:</label><br />
-                        <input type="text" name="post_bg_color" id="post_bg_color" value="<?php echo esc_attr( get_option('post_bg_color') ); ?>" class="color-picker" /><br />
-                        <label for="post_font_color">Post Font Color:</label><br />
-                        <input type="text" name="post_font_color" id="post_font_color" value="<?php echo esc_attr( get_option('post_font_color') ); ?>" class="color-picker" />
-                    </td>
-                </tr>
+                <!-- Other Settings -->
+                <!-- Your other settings go here... -->
 
-                <!-- Disable Comments -->
-                <tr valign="top">
-                    <th scope="row">Disable Comments</th>
-                    <td>
-                        <label for="disable_comments">
-                            <input type="checkbox" name="disable_comments" id="disable_comments" value="1" <?php checked( get_option('disable_comments'), 1 ); ?> />
-                            Disable Comments on Posts
-                        </label>
-                    </td>
-                </tr>
-
-                <!-- Post Layout Style -->
-                <tr valign="top">
-                    <th scope="row">Post Layout Style</th>
-                    <td>
-                        <select name="post_layout" id="post_layout">
-                            <option value="full-width" <?php selected(get_option('post_layout'), 'full-width'); ?>>Full Width</option>
-                            <option value="grid" <?php selected(get_option('post_layout'), 'grid'); ?>>Grid</option>
-                            <option value="list" <?php selected(get_option('post_layout'), 'list'); ?>>List</option>
-                        </select>
-                    </td>
-                </tr>
-
-                <!-- Post Title Customization -->
-                <tr valign="top">
-                    <th scope="row">Post Title Customization</th>
-                    <td>
-                        <label for="post_title_font_size">Font Size (in px):</label><br />
-                        <input type="number" name="post_title_font_size" id="post_title_font_size" value="<?php echo esc_attr(get_option('post_title_font_size', '36')); ?>" /><br />
-                        <label for="post_title_font_family">Font Family:</label><br />
-                        <input type="text" name="post_title_font_family" id="post_title_font_family" value="<?php echo esc_attr(get_option('post_title_font_family', 'Arial, sans-serif')); ?>" />
-                    </td>
-                </tr>
-
-                <!-- Custom Post Styling -->
-                <tr valign="top">
-                    <th scope="row">Custom Post Styling</th>
-                    <td>
-                        <label for="custom_font">Font Size (in px):</label><br />
-                        <input type="number" name="custom_font_size" id="custom_font_size" value="<?php echo esc_attr(get_option('custom_font_size', '16')); ?>" /><br />
-                        <label for="custom_margin">Margin (in px):</label><br />
-                        <input type="number" name="custom_margin" id="custom_margin" value="<?php echo esc_attr(get_option('custom_margin', '10')); ?>" /><br />
-                        <label for="custom_padding">Padding (in px):</label><br />
-                        <input type="number" name="custom_padding" id="custom_padding" value="<?php echo esc_attr(get_option('custom_padding', '20')); ?>" /><br />
-                    </td>
-                </tr>
-
-                <!-- Custom CSS for Posts -->
-                <tr valign="top">
-                    <th scope="row">Custom CSS for Posts</th>
-                    <td>
-                        <textarea name="post_custom_css" id="post_custom_css" rows="5" cols="50"><?php echo esc_textarea(get_option('post_custom_css')); ?></textarea>
-                    </td>
-                </tr>
             </table>
 
             <?php submit_button(); ?>
@@ -134,16 +72,7 @@ function hpmc_register_settings() {
     register_setting('hpmc_options_group', 'hide_date');
     register_setting('hpmc_options_group', 'hide_categories');
     register_setting('hpmc_options_group', 'hide_excerpt');
-    register_setting('hpmc_options_group', 'post_bg_color');
-    register_setting('hpmc_options_group', 'post_font_color');
-    register_setting('hpmc_options_group', 'disable_comments');
-    register_setting('hpmc_options_group', 'post_layout');
-    register_setting('hpmc_options_group', 'post_title_font_size');
-    register_setting('hpmc_options_group', 'post_title_font_family');
-    register_setting('hpmc_options_group', 'custom_font_size');
-    register_setting('hpmc_options_group', 'custom_margin');
-    register_setting('hpmc_options_group', 'custom_padding');
-    register_setting('hpmc_options_group', 'post_custom_css');
+    // Register other settings...
 }
 add_action('admin_init', 'hpmc_register_settings');
 
@@ -170,7 +99,28 @@ function hpmc_modify_post_content($content) {
 }
 add_filter('the_content', 'hpmc_modify_post_content');
 
-// Modify post UI based on settings
+// Remove metadata actions using WordPress hooks
+function hpmc_remove_post_metadata() {
+    if (is_single() && 'post' === get_post_type()) {
+
+        // Hide author, date, categories, and excerpt using hooks
+        if (get_option('hide_author') === '1') {
+            remove_action('the_author', 'the_author');
+        }
+        if (get_option('hide_date') === '1') {
+            remove_action('the_date', 'the_date');
+        }
+        if (get_option('hide_categories') === '1') {
+            remove_action('the_category', 'the_category');
+        }
+        if (get_option('hide_excerpt') === '1') {
+            remove_action('the_excerpt', 'the_excerpt');
+        }
+    }
+}
+add_action('wp', 'hpmc_remove_post_metadata');
+
+// Modify post UI based on settings (CSS Styling)
 function hpmc_modify_post_ui() {
     if (is_single() && 'post' === get_post_type()) {
         $bg_color = get_option('post_bg_color', '#ffffff');
