@@ -65,6 +65,17 @@ function hpmc_settings_page() {
                     </td>
                 </tr>
 
+                <!-- Hide Metadata for Users -->
+                <tr valign="top">
+                    <th scope="row">Hide Metadata for Users</th>
+                    <td>
+                        <label for="hide_metadata_for_users">
+                            <input type="checkbox" name="hide_metadata_for_users" id="hide_metadata_for_users" value="1" <?php checked( get_option('hide_metadata_for_users'), 1 ); ?> />
+                            Hide Metadata (author, date, etc.) for Regular Users
+                        </label>
+                    </td>
+                </tr>
+
             </table>
 
             <?php submit_button(); ?>
@@ -79,6 +90,7 @@ function hpmc_register_settings() {
     register_setting('hpmc_options_group', 'post_font_color');
     register_setting('hpmc_options_group', 'disable_comments');
     register_setting('hpmc_options_group', 'disable_social_sharing');
+    register_setting('hpmc_options_group', 'hide_metadata_for_users');
 }
 add_action('admin_init', 'hpmc_register_settings');
 
@@ -172,25 +184,21 @@ function hpmc_modify_post_ui() {
 
         // Add CSS to hide metadata on the front end based on the user's selection
         echo '<style>';
-        
-        // Hide author if the setting is enabled
-        if ($hide_author === '1') {
-            echo '.single-post .author, .single-post .entry-author, .single-post .post-author { display: none !important; }';
-        }
 
-        // Hide date if the setting is enabled
-        if ($hide_date === '1') {
-            echo '.single-post .posted-on, .single-post .entry-date, .single-post time { display: none !important; }';
-        }
-
-        // Hide categories if the setting is enabled
-        if ($hide_categories === '1') {
-            echo '.single-post .cat-links, .single-post .tags-links, .single-post .post-meta .categories { display: none !important; }';
-        }
-
-        // Hide excerpt if the setting is enabled
-        if ($hide_excerpt === '1') {
-            echo '.single-post .post-excerpt, .single-post .entry-summary { display: none !important; }';
+        if (get_option('hide_metadata_for_users') === '1' && !is_user_logged_in()) {
+            // Hide metadata for users based on settings
+            if ($hide_author === '1') {
+                echo '.single-post .author, .single-post .entry-author, .single-post .post-author { display: none !important; }';
+            }
+            if ($hide_date === '1') {
+                echo '.single-post .posted-on, .single-post .entry-date, .single-post time { display: none !important; }';
+            }
+            if ($hide_categories === '1') {
+                echo '.single-post .cat-links, .single-post .tags-links, .single-post .post-meta .categories { display: none !important; }';
+            }
+            if ($hide_excerpt === '1') {
+                echo '.single-post .post-excerpt, .single-post .entry-summary { display: none !important; }';
+            }
         }
 
         // Hide social sharing if the setting is enabled
