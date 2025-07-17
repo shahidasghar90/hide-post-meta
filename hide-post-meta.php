@@ -3,7 +3,7 @@
 Plugin Name: Hide Post Metadata & Customize UI
 Plugin URI: https://devdinos.com
 Description: A simple plugin to hide post metadata like date, author, categories, excerpt, tags, and social sharing buttons, with options to customize post UI and more.
-Version: 1.4
+Version: 1.5
 Author: Shahid Asghar
 Author URI: https://devdinos.com
 */
@@ -173,20 +173,27 @@ function hpmc_modify_post_ui() {
         // Add CSS to hide metadata on the front end based on the user's selection
         echo '<style>';
         
+        // Hide author if the setting is enabled
         if ($hide_author === '1') {
-            echo '.single-post .author, .single-post .post-meta .author, .single-post .post-author, .single-post .entry-author { display: none !important; }';
+            echo '.single-post .author, .single-post .entry-author, .single-post .post-author { display: none !important; }';
         }
+
+        // Hide date if the setting is enabled
         if ($hide_date === '1') {
-            echo '.single-post .posted-on, .single-post .post-meta .date, .single-post time, .single-post .entry-date { display: none !important; }';
+            echo '.single-post .posted-on, .single-post .entry-date, .single-post time { display: none !important; }';
         }
+
+        // Hide categories if the setting is enabled
         if ($hide_categories === '1') {
-            echo '.single-post .cat-links, .single-post .post-meta .categories, .single-post .tags-links { display: none !important; }';
+            echo '.single-post .cat-links, .single-post .tags-links, .single-post .post-meta .categories { display: none !important; }';
         }
+
+        // Hide excerpt if the setting is enabled
         if ($hide_excerpt === '1') {
             echo '.single-post .post-excerpt, .single-post .entry-summary { display: none !important; }';
         }
 
-        // Check if social sharing is disabled
+        // Hide social sharing if the setting is enabled
         if (get_option('disable_social_sharing') === '1') {
             echo '.single-post .social-sharing { display: none !important; }';
         }
