@@ -2,7 +2,7 @@
 /*
 Plugin Name: Hide Post Metadata & Customize UI
 Plugin URI: https://devdinos.com
-Description: A simple plugin to hide post metadata like date, author, categories, and excerpt, with options to customize post UI and more.
+Description: A simple plugin to hide post metadata like date, author, categories, excerpt, tags, and social sharing buttons, with options to customize post UI and more.
 Version: 1.4
 Author: Shahid Asghar
 Author URI: https://devdinos.com
@@ -54,6 +54,17 @@ function hpmc_settings_page() {
                     </td>
                 </tr>
 
+                <!-- Hide Social Sharing -->
+                <tr valign="top">
+                    <th scope="row">Hide Social Sharing Buttons</th>
+                    <td>
+                        <label for="disable_social_sharing">
+                            <input type="checkbox" name="disable_social_sharing" id="disable_social_sharing" value="1" <?php checked( get_option('disable_social_sharing'), 1 ); ?> />
+                            Disable Social Sharing on Posts
+                        </label>
+                    </td>
+                </tr>
+
             </table>
 
             <?php submit_button(); ?>
@@ -67,6 +78,7 @@ function hpmc_register_settings() {
     register_setting('hpmc_options_group', 'post_bg_color');
     register_setting('hpmc_options_group', 'post_font_color');
     register_setting('hpmc_options_group', 'disable_comments');
+    register_setting('hpmc_options_group', 'disable_social_sharing');
 }
 add_action('admin_init', 'hpmc_register_settings');
 
@@ -162,16 +174,21 @@ function hpmc_modify_post_ui() {
         echo '<style>';
         
         if ($hide_author === '1') {
-            echo '.single-post .author, .single-post .post-meta .author, .single-post .post-author { display: none !important; }';
+            echo '.single-post .author, .single-post .post-meta .author, .single-post .post-author, .single-post .entry-author { display: none !important; }';
         }
         if ($hide_date === '1') {
-            echo '.single-post .posted-on, .single-post .post-meta .date, .single-post time { display: none !important; }';
+            echo '.single-post .posted-on, .single-post .post-meta .date, .single-post time, .single-post .entry-date { display: none !important; }';
         }
         if ($hide_categories === '1') {
-            echo '.single-post .cat-links, .single-post .post-meta .categories { display: none !important; }';
+            echo '.single-post .cat-links, .single-post .post-meta .categories, .single-post .tags-links { display: none !important; }';
         }
         if ($hide_excerpt === '1') {
             echo '.single-post .post-excerpt, .single-post .entry-summary { display: none !important; }';
+        }
+
+        // Check if social sharing is disabled
+        if (get_option('disable_social_sharing') === '1') {
+            echo '.single-post .social-sharing { display: none !important; }';
         }
 
         echo '</style>';
@@ -204,10 +221,12 @@ add_action('wp', 'hpmc_disable_comments');
 // Add social sharing buttons to post content
 function hpmc_add_social_sharing_buttons($content) {
     if (is_single() && 'post' === get_post_type()) {
-        $content .= '<div class="social-sharing">
-            <a href="https://www.facebook.com/sharer/sharer.php?u=' . get_permalink() . '" target="_blank">Share on Facebook</a> |
-            <a href="https://twitter.com/intent/tweet?url=' . get_permalink() . '" target="_blank">Share on Twitter</a>
-        </div>';
+        if (get_option('disable_social_sharing') !== '1') {
+            $content .= '<div class="social-sharing">
+                <a href="https://www.facebook.com/sharer/sharer.php?u=' . get_permalink() . '" target="_blank">Share on Facebook</a> |
+                <a href="https://twitter.com/intent/tweet?url=' . get_permalink() . '" target="_blank">Share on Twitter</a>
+            </div>';
+        }
     }
     return $content;
 }
@@ -231,15 +250,23 @@ function hpmc_modify_post_ui_js() {
 
                 if ($hide_author === '1') {
                     echo 'document.querySelector(".author").style.display = "none";';
+                    echo 'document.querySelector(".entry-author").style.display = "none";';
                 }
                 if ($hide_date === '1') {
                     echo 'document.querySelector(".posted-on").style.display = "none";';
+                    echo 'document.querySelector(".entry-date").style.display = "none";';
                 }
                 if ($hide_categories === '1') {
                     echo 'document.querySelector(".cat-links").style.display = "none";';
+                    echo 'document.querySelector(".tags-links").style.display = "none";';
                 }
                 if ($hide_excerpt === '1') {
                     echo 'document.querySelector(".post-excerpt").style.display = "none";';
+                    echo 'document.querySelector(".entry-summary").style.display = "none";';
+                }
+
+                if ('1' === get_option('disable_social_sharing')) {
+                    echo 'document.querySelector(".social-sharing").style.display = "none";';
                 }
 
         echo '});
