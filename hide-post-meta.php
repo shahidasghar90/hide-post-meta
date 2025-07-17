@@ -3,7 +3,7 @@
 Plugin Name: Hide Post Metadata & Customize UI
 Plugin URI: https://devdinos.com
 Description: A simple plugin to hide post metadata like date, author, categories, and excerpt, with options to customize post UI and more.
-Version: 1.3
+Version: 1.4
 Author: Shahid Asghar
 Author URI: https://devdinos.com
 */
@@ -160,18 +160,18 @@ function hpmc_modify_post_ui() {
 
         // Add CSS to hide metadata on the front end based on the user's selection
         echo '<style>';
-
+        
         if ($hide_author === '1') {
-            echo '.single-post .author, .single-post .author-info { display: none; }';
+            echo '.single-post .author, .single-post .post-meta .author, .single-post .post-author { display: none !important; }';
         }
         if ($hide_date === '1') {
-            echo '.single-post .posted-on { display: none; }';
+            echo '.single-post .posted-on, .single-post .post-meta .date, .single-post time { display: none !important; }';
         }
         if ($hide_categories === '1') {
-            echo '.single-post .cat-links { display: none; }';
+            echo '.single-post .cat-links, .single-post .post-meta .categories { display: none !important; }';
         }
         if ($hide_excerpt === '1') {
-            echo '.single-post .post-excerpt { display: none; }';
+            echo '.single-post .post-excerpt, .single-post .entry-summary { display: none !important; }';
         }
 
         echo '</style>';
@@ -212,3 +212,39 @@ function hpmc_add_social_sharing_buttons($content) {
     return $content;
 }
 add_filter('the_content', 'hpmc_add_social_sharing_buttons');
+
+// Use JavaScript for dynamically hiding elements based on metadata settings
+function hpmc_modify_post_ui_js() {
+    if (is_single() && 'post' === get_post_type()) {
+        global $post;
+
+        // Get the custom metadata values
+        $hide_author = get_post_meta($post->ID, '_hide_author', true);
+        $hide_date = get_post_meta($post->ID, '_hide_date', true);
+        $hide_categories = get_post_meta($post->ID, '_hide_categories', true);
+        $hide_excerpt = get_post_meta($post->ID, '_hide_excerpt', true);
+
+        // JavaScript code to hide the elements dynamically
+        echo '<script type="text/javascript">
+            document.addEventListener("DOMContentLoaded", function() {
+                ';
+
+                if ($hide_author === '1') {
+                    echo 'document.querySelector(".author").style.display = "none";';
+                }
+                if ($hide_date === '1') {
+                    echo 'document.querySelector(".posted-on").style.display = "none";';
+                }
+                if ($hide_categories === '1') {
+                    echo 'document.querySelector(".cat-links").style.display = "none";';
+                }
+                if ($hide_excerpt === '1') {
+                    echo 'document.querySelector(".post-excerpt").style.display = "none";';
+                }
+
+        echo '});
+        </script>';
+    }
+}
+add_action('wp_footer', 'hpmc_modify_post_ui_js');
+?>
