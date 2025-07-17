@@ -2,8 +2,8 @@
 /*
 Plugin Name: Hide Post Metadata & Customize UI
 Plugin URI: https://devdinos.com
-Description: A simple plugin to hide post metadata like date, author, categories, and excerpt, with options to customize post UI.
-Version: 1.1
+Description: A simple plugin to hide post metadata like date, author, categories, and excerpt, with options to customize post UI and more.
+Version: 1.2
 Author: Shahid Asghar
 Author URI: https://devdinos.com
 */
@@ -32,6 +32,7 @@ function hpmc_settings_page() {
             ?>
             
             <table class="form-table">
+                <!-- Hide Post Metadata -->
                 <tr valign="top">
                     <th scope="row">Hide Post Metadata</th>
                     <td>
@@ -54,6 +55,7 @@ function hpmc_settings_page() {
                     </td>
                 </tr>
 
+                <!-- Customize Post UI -->
                 <tr valign="top">
                     <th scope="row">Customize Post UI</th>
                     <td>
@@ -64,6 +66,7 @@ function hpmc_settings_page() {
                     </td>
                 </tr>
 
+                <!-- Disable Comments -->
                 <tr valign="top">
                     <th scope="row">Disable Comments</th>
                     <td>
@@ -71,6 +74,50 @@ function hpmc_settings_page() {
                             <input type="checkbox" name="disable_comments" id="disable_comments" value="1" <?php checked( get_option('disable_comments'), 1 ); ?> />
                             Disable Comments on Posts
                         </label>
+                    </td>
+                </tr>
+
+                <!-- Post Layout Style -->
+                <tr valign="top">
+                    <th scope="row">Post Layout Style</th>
+                    <td>
+                        <select name="post_layout" id="post_layout">
+                            <option value="full-width" <?php selected(get_option('post_layout'), 'full-width'); ?>>Full Width</option>
+                            <option value="grid" <?php selected(get_option('post_layout'), 'grid'); ?>>Grid</option>
+                            <option value="list" <?php selected(get_option('post_layout'), 'list'); ?>>List</option>
+                        </select>
+                    </td>
+                </tr>
+
+                <!-- Post Title Customization -->
+                <tr valign="top">
+                    <th scope="row">Post Title Customization</th>
+                    <td>
+                        <label for="post_title_font_size">Font Size (in px):</label><br />
+                        <input type="number" name="post_title_font_size" id="post_title_font_size" value="<?php echo esc_attr(get_option('post_title_font_size', '36')); ?>" /><br />
+                        <label for="post_title_font_family">Font Family:</label><br />
+                        <input type="text" name="post_title_font_family" id="post_title_font_family" value="<?php echo esc_attr(get_option('post_title_font_family', 'Arial, sans-serif')); ?>" />
+                    </td>
+                </tr>
+
+                <!-- Custom Post Styling -->
+                <tr valign="top">
+                    <th scope="row">Custom Post Styling</th>
+                    <td>
+                        <label for="custom_font">Font Size (in px):</label><br />
+                        <input type="number" name="custom_font_size" id="custom_font_size" value="<?php echo esc_attr(get_option('custom_font_size', '16')); ?>" /><br />
+                        <label for="custom_margin">Margin (in px):</label><br />
+                        <input type="number" name="custom_margin" id="custom_margin" value="<?php echo esc_attr(get_option('custom_margin', '10')); ?>" /><br />
+                        <label for="custom_padding">Padding (in px):</label><br />
+                        <input type="number" name="custom_padding" id="custom_padding" value="<?php echo esc_attr(get_option('custom_padding', '20')); ?>" /><br />
+                    </td>
+                </tr>
+
+                <!-- Custom CSS for Posts -->
+                <tr valign="top">
+                    <th scope="row">Custom CSS for Posts</th>
+                    <td>
+                        <textarea name="post_custom_css" id="post_custom_css" rows="5" cols="50"><?php echo esc_textarea(get_option('post_custom_css')); ?></textarea>
                     </td>
                 </tr>
             </table>
@@ -90,6 +137,13 @@ function hpmc_register_settings() {
     register_setting('hpmc_options_group', 'post_bg_color');
     register_setting('hpmc_options_group', 'post_font_color');
     register_setting('hpmc_options_group', 'disable_comments');
+    register_setting('hpmc_options_group', 'post_layout');
+    register_setting('hpmc_options_group', 'post_title_font_size');
+    register_setting('hpmc_options_group', 'post_title_font_family');
+    register_setting('hpmc_options_group', 'custom_font_size');
+    register_setting('hpmc_options_group', 'custom_margin');
+    register_setting('hpmc_options_group', 'custom_padding');
+    register_setting('hpmc_options_group', 'post_custom_css');
 }
 add_action('admin_init', 'hpmc_register_settings');
 
@@ -121,13 +175,42 @@ function hpmc_modify_post_ui() {
     if (is_single() && 'post' === get_post_type()) {
         $bg_color = get_option('post_bg_color', '#ffffff');
         $font_color = get_option('post_font_color', '#000000');
+        $layout = get_option('post_layout', 'full-width');
+        $font_size = get_option('post_title_font_size', '36');
+        $font_family = get_option('post_title_font_family', 'Arial, sans-serif');
+        $custom_font_size = get_option('custom_font_size', '16');
+        $custom_margin = get_option('custom_margin', '10');
+        $custom_padding = get_option('custom_padding', '20');
+        $custom_css = get_option('post_custom_css');
         
+        // Post styling
         echo '<style>
             .single-post {
                 background-color: ' . esc_attr($bg_color) . ';
                 color: ' . esc_attr($font_color) . ';
+                width: 100%;
+                padding: 20px;
             }
+            .single-post.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+            .single-post.list { display: block; }
+
+            .single-post .entry-title {
+                font-size: ' . esc_attr($font_size) . 'px;
+                font-family: ' . esc_attr($font_family) . ';
+            }
+
+            .single-post {
+                font-size: ' . esc_attr($custom_font_size) . 'px;
+                margin: ' . esc_attr($custom_margin) . 'px;
+                padding: ' . esc_attr($custom_padding) . 'px;
+            }
+            ' . esc_html($custom_css) . '
         </style>';
+
+        // Apply the layout class to the post
+        if ($layout !== 'full-width') {
+            echo "<script>document.querySelector('.single-post').classList.add('$layout');</script>";
+        }
     }
 }
 add_action('wp_head', 'hpmc_modify_post_ui');
@@ -138,9 +221,30 @@ function hpmc_disable_comments() {
         if (get_option('disable_comments') === '1') {
             // Disable comments for posts
             remove_post_type_support('post', 'comments');
-            // Optionally, you can also hide the comments section from the frontend:
-            echo '<style>.comments-area { display: none; }</style>';
+            
+            // Optionally, hide comments section from the frontend with CSS
+            echo '<style>
+                .comments-area, .comment-respond, #respond { display: none !important; }
+            </style>';
+            
+            // Redirect if someone tries to access the comment section
+            if (isset($_GET['comment']) && is_single()) {
+                wp_redirect(get_permalink());
+                exit;
+            }
         }
     }
 }
 add_action('wp', 'hpmc_disable_comments');
+
+// Add social sharing buttons to post content
+function hpmc_add_social_sharing_buttons($content) {
+    if (is_single() && 'post' === get_post_type()) {
+        $content .= '<div class="social-sharing">
+            <a href="https://www.facebook.com/sharer/sharer.php?u=' . get_permalink() . '" target="_blank">Share on Facebook</a> |
+            <a href="https://twitter.com/intent/tweet?url=' . get_permalink() . '" target="_blank">Share on Twitter</a>
+        </div>';
+    }
+    return $content;
+}
+add_filter('the_content', 'hpmc_add_social_sharing_buttons');
