@@ -281,4 +281,11 @@ function hpmc_modify_post_ui_js() {
     }
 }
 add_action('wp_footer', 'hpmc_modify_post_ui_js');
+
+// Enqueue the plugin CSS to ensure it loads last and overrides theme styles
+function hpmc_enqueue_styles() {
+    // Enqueue the plugin's custom CSS with high priority
+    wp_enqueue_style('hpmc-style', plugin_dir_url(__FILE__) . 'style.css', array(), null, 'all');
+}
+add_action('wp_enqueue_scripts', 'hpmc_enqueue_styles', 999); // Set priority to 999 to load after other styles
 ?>
