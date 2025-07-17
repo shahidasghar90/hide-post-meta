@@ -147,8 +147,8 @@ function hpmc_save_post_metadata($post_id) {
 }
 add_action('save_post', 'hpmc_save_post_metadata');
 
-// Modify post content based on post-specific settings
-function hpmc_modify_post_content($content) {
+// Modify post content based on post-specific settings (Front-end CSS)
+function hpmc_modify_post_ui() {
     if (is_single() && 'post' === get_post_type()) {
         global $post;
 
@@ -158,26 +158,28 @@ function hpmc_modify_post_content($content) {
         $hide_categories = get_post_meta($post->ID, '_hide_categories', true);
         $hide_excerpt = get_post_meta($post->ID, '_hide_excerpt', true);
 
-        // Check and remove metadata if needed
+        // Add CSS to hide metadata on the front end based on the user's selection
+        echo '<style>';
+
         if ($hide_author === '1') {
-            $content = preg_replace('/<span class="author">.*?<\/span>/', '', $content);
+            echo '.single-post .author, .single-post .author-info { display: none; }';
         }
         if ($hide_date === '1') {
-            $content = preg_replace('/<span class="posted-on">.*?<\/span>/', '', $content);
+            echo '.single-post .posted-on { display: none; }';
         }
         if ($hide_categories === '1') {
-            $content = preg_replace('/<span class="cat-links">.*?<\/span>/', '', $content);
+            echo '.single-post .cat-links { display: none; }';
         }
         if ($hide_excerpt === '1') {
-            $content = preg_replace('/<div class="post-excerpt">.*?<\/div>/', '', $content);
+            echo '.single-post .post-excerpt { display: none; }';
         }
+
+        echo '</style>';
     }
-
-    return $content;
 }
-add_filter('the_content', 'hpmc_modify_post_content');
+add_action('wp_head', 'hpmc_modify_post_ui');
 
-// Disable comments based on settings
+// Disable comments based on settings (Frontend)
 function hpmc_disable_comments() {
     if (is_single() && 'post' === get_post_type()) {
         if (get_option('disable_comments') === '1') {
